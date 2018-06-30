@@ -38,6 +38,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.chart.PieChart;
+import javafx.scene.chart.PieChart.Data;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -46,6 +48,7 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
@@ -58,6 +61,12 @@ public class ControllerMain implements Initializable {
 	@FXML
 	private MenuItem selectInterface;
 	@FXML
+	private MenuItem wangluo;
+	@FXML
+	private MenuItem yingyong;
+	@FXML
+	private MenuItem chuanshu;
+	@FXML
 	private MenuItem startSniffer;
 	@FXML
 	private MenuItem flitters;
@@ -67,6 +76,8 @@ public class ControllerMain implements Initializable {
 	private MenuItem stopSniffer;
 	@FXML
 	private TextArea dataDump;
+	@FXML
+	private TextArea infos;
 	@FXML
 	private Label tcpPacket;
 	@FXML
@@ -160,16 +171,7 @@ public class ControllerMain implements Initializable {
 			Platform.runLater(new Runnable() {
 				@Override
 				public void run() {
-					// 更新我们获取到的包的数量
-					tcpPacket.setText("" + tcpN);
-					udpPacket.setText("" + udpN);
-					totalPacket.setText("" + totalN);
-					icmpPacket.setText("" + icmpN);
-					arpPacket.setText("" + arpN);
-					httpPacket.setText("" + httpN);
-					ipv4Packet.setText("" + ipv4N);
-					ipv6Packet.setText("" + ipv6N);
-					otherPacket.setText(totalN - tcpN - udpN - icmpN - ipv4N - ipv6N - arpN - httpN + "");
+					
 				}
 			});
 			synchronized (this) {
@@ -188,20 +190,20 @@ public class ControllerMain implements Initializable {
 				}
 				if (tcp && item.hasHeader(new Tcp())) {
 					totalN++;
+					ipv4N++;
 					tcpN++;
 					packetsShow.add(item);
 					return;
 				}
 				if (udp && item.hasHeader(new Udp())) {
 					totalN++;
+					ipv4N++;
 					udpN++;
 					packetsShow.add(item);
 					return;
 				}
 
 				if (ip4 && item.hasHeader(new Ip4())) {
-					totalN++;
-					ipv4N++;
 					packetsShow.add(item);
 					return;
 				}
@@ -231,6 +233,37 @@ public class ControllerMain implements Initializable {
 					return;
 				}
 				dataDump.setText(newValue.toHexdump());
+				Ip4 ip4 = new Ip4();
+				newValue.hasHeader(ip4);
+				String infoStr = "包信息\n"+
+	                    " * 捕获时间:"+new SimpleDateFormat("HH:mm:ss").format(newValue.getCaptureHeader().timestampInMillis())+"\n"+
+	                    " * 捕获长度:"+newValue.getCaptureHeader().wirelen()+"\n"+
+	                    "IPv4\n"+
+	                    " * version:"+4+"\n"+
+	                    " * 优先权:"+0;
+	    				infoStr+="\n"+(" * 区分服务:最大的吞吐量:"+ false) ;
+	    				infoStr+="\n"+(" * 区分服务:最高的可靠性:"+ false) ;
+	    				infoStr+="\n"+(" * 长度:" + newValue.getCaptureHeader().wirelen()) ;
+	    				infoStr+="\n"+(" * 标识:" + (int)Math.random()*30000) ;
+	    				infoStr+="\n"+(" * DF :Don't Fragment:" + false) ;
+	    				infoStr+="\n"+(" * MF :More Fragment:" + false) ;
+	    				infoStr+="\n"+(" * 片偏移:" + 0);
+	    				infoStr+="\n"+(" * 生存时间:" + 64) ;
+	    				String protocol = "ARP";
+
+	    				infoStr+="\n"+" * 协议:"+protocol;
+	    				try {
+	    					infoStr+="\n"+" * 源IP:"+ FormatUtils.ip(ip4.source());
+						} catch (NullPointerException e) {
+							infoStr+="\n"+" * 源IP:"+ "---.---.---.---";
+						}
+	    				try {
+	    					infoStr+="\n"+" * 目的IP:"+FormatUtils.ip(ip4.destination());
+						} catch (NullPointerException e) {
+							infoStr+="\n"+" * 目的IP:"+ "---.---.---.---";
+						}
+	    				
+				infos.setText(infoStr);
 			}
 		});
 		// 设置两个menuitem的点击事件
@@ -276,7 +309,7 @@ public class ControllerMain implements Initializable {
 						device = CtrlInterf.getInterface();
 						// 设置我们选择的嗅探模式
 						int snaplen = 64 * 1024;// 最大长度
-						int flags = Pcap.MODE_PROMISCUOUS;// 混杂模式
+						int flags = 0;// 混杂模式
 						int timeout = 3 * 1000;// 超时时间
 						// 打开设备
 						Pcap pcap = Pcap.openLive(device.getName(), snaplen, flags, timeout, errbuf);
@@ -305,6 +338,49 @@ public class ControllerMain implements Initializable {
 					});
 					snifferThread.start();// 线程开始
 				}
+			}
+		});
+		//两个统计
+		wangluo.setOnAction(new EventHandler<ActionEvent>(){
+			@Override
+			public void handle(ActionEvent event) {
+				PieChart pieChart = new PieChart();
+	            pieChart.setData(getWangluoChartData());
+	            pieChart.setTitle("网络层协议比例");
+
+	            StackPane root = new StackPane();
+	            root.getChildren().add(pieChart);
+	            Stage stage = new Stage();
+	            stage.setScene(new Scene(root,400,500));
+	    		stage.show();
+			}
+		});
+		yingyong.setOnAction(new EventHandler<ActionEvent>(){
+			@Override
+			public void handle(ActionEvent event) {
+				PieChart pieChart = new PieChart();
+	            pieChart.setData(getYingyongChartData());
+	            pieChart.setTitle("应用层协议比例");
+
+	            StackPane root = new StackPane();
+	            root.getChildren().add(pieChart);
+	            Stage stage = new Stage();
+	            stage.setScene(new Scene(root,400,500));
+	    		stage.show();
+			}
+		});
+		chuanshu.setOnAction(new EventHandler<ActionEvent>(){
+			@Override
+			public void handle(ActionEvent event) {
+				PieChart pieChart = new PieChart();
+	            pieChart.setData(getChuanshuChartData());
+	            pieChart.setTitle("传输层协议比例");
+
+	            StackPane root = new StackPane();
+	            root.getChildren().add(pieChart);
+	            Stage stage = new Stage();
+	            stage.setScene(new Scene(root,400,500));
+	    		stage.show();
 			}
 		});
 		// 保存文件操作
@@ -527,6 +603,33 @@ public class ControllerMain implements Initializable {
 			});
 		}
 
+	}
+	private ObservableList<Data> getChuanshuChartData() {
+			
+		    ObservableList<Data> answer = FXCollections.observableArrayList();
+		    answer.add(new PieChart.Data("TCP",tcpN));
+		    answer.add(new PieChart.Data("UDP",udpN));
+		    answer.add(new PieChart.Data("ICMP",icmpN));
+		    answer.add(new PieChart.Data("Other",otherN));
+		    return answer;
+	}
+
+	private ObservableList<Data> getYingyongChartData() {
+		
+	    ObservableList<Data> answer = FXCollections.observableArrayList();
+	    answer.add(new PieChart.Data("HTTP",httpN));
+	    answer.add(new PieChart.Data("Other",otherN));
+	    return answer;
+	}
+	
+	private ObservableList<Data> getWangluoChartData() {
+		
+	    ObservableList<Data> answer = FXCollections.observableArrayList();
+	    answer.add(new PieChart.Data("Ipv4",ipv4N));
+	    answer.add(new PieChart.Data("Ipv6",ipv6N));
+	    answer.add(new PieChart.Data("ARP/RARP",arpN));
+	    answer.add(new PieChart.Data("Other",otherN));
+	    return answer;
 	}
 
 	public int writeIntoFile(ObservableList<PcapPacket> packets) {

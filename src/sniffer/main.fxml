@@ -8,7 +8,7 @@
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane prefHeight="451.0" prefWidth="715.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sniffer.ControllerMain">
+<AnchorPane prefHeight="451.0" prefWidth="715.0" xmlns="http://javafx.com/javafx/8.0.112" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sniffer.ControllerMain">
    <children>
       <MenuBar fx:id="menuBar">
         <menus>
@@ -29,28 +29,17 @@
               <MenuItem fx:id="fileSave" mnemonicParsing="false" text="保存" />
             </items>
           </Menu>
+          <Menu mnemonicParsing="false" text="统计">
+            <items>
+              <MenuItem fx:id="chuanshu" mnemonicParsing="false" text="传输层协议比例" />
+              <MenuItem fx:id="wangluo" mnemonicParsing="false" text="网络层协议比例" />
+              <MenuItem fx:id="yingyong" mnemonicParsing="false" text="应用层协议比例" />
+            </items>
+          </Menu>
         </menus>
       </MenuBar>
       <ListView fx:id="listPackets" layoutX="15.0" layoutY="54.0" prefHeight="200.0" prefWidth="685.0" />
       <TextArea fx:id="dataDump" editable="false" layoutX="16.0" layoutY="260.0" prefHeight="177.0" prefWidth="456.0" />
-      <Label layoutX="550.0" layoutY="260.0" text="统计信息" />
-      <Label layoutX="500.0" layoutY="290.0" text="TCP" />
-      <Label layoutX="500.0" layoutY="320.0" text="UDP" />
-      <Label layoutX="500.0" layoutY="350.0" text="ICMP" />
-      <Label layoutX="500.0" layoutY="380.0" text="HTTP" />
-      <Label fx:id="tcpPacket" layoutX="560.0" layoutY="290.0" text="0" />
-      <Label fx:id="udpPacket" layoutX="560.0" layoutY="320.0" text="0" />
-      <Label fx:id="icmpPacket" layoutX="560.0" layoutY="350.0" text="0" />
-      <Label fx:id="httpPacket" layoutX="560.0" layoutY="380.0" text="0" />
-      <Label layoutX="600.0" layoutY="290.0" text="ARP" />
-      <Label layoutX="600.0" layoutY="320.0" text="IPv4" />
-      <Label layoutX="600.0" layoutY="350.0" text="IPv6" />
-      <Label layoutX="600.0" layoutY="380.0" text="其它" />
-      <Label fx:id="arpPacket" layoutX="660.0" layoutY="290.0" text="0" />
-      <Label fx:id="ipv4Packet" layoutX="660.0" layoutY="320.0" text="0" />
-      <Label fx:id="ipv6Packet" layoutX="660.0" layoutY="350.0" text="0" />
-      <Label fx:id="otherPacket" layoutX="660.0" layoutY="380.0" text="0" />
-      <Label layoutX="540.0" layoutY="410.0" text="总计" />
-      <Label fx:id="totalPacket" layoutX="620.0" layoutY="410.0" text="0" />
+      <TextArea fx:id="infos" editable="false" layoutX="472.0" layoutY="260.0" prefHeight="177.0" prefWidth="229.0" />
    </children>
 </AnchorPane>
